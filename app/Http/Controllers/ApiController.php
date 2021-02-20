@@ -24,10 +24,10 @@ class ApiController extends Controller
             return $this->login($request);
         }
 
-        return response()->json([
+        return $this->success('','注册成功',[
             'success' => true,
             'data' => $user
-        ], 200);
+        ]);
     }
 
     public function login(Request $request)
@@ -36,13 +36,10 @@ class ApiController extends Controller
         $jwt_token = null;
 
         if (!$jwt_token = JWTAuth::attempt($input)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid Email or Password',
-            ], 401);
+            return $this->error('','登陆异常：Invalid Email or Password');
         }
 
-        return response()->json([
+        return $this->success('','登陆成功',[
             'success' => true,
             'token' => $jwt_token,
         ]);
@@ -56,16 +53,9 @@ class ApiController extends Controller
 
         try {
             JWTAuth::invalidate($request->token);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'User logged out successfully'
-            ]);
+            return $this->success('','User logged out successfully');
         } catch (JWTException $exception) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sorry, the user cannot be logged out'
-            ], 500);
+            return $this->error(500,'Sorry, the user cannot be logged out');
         }
     }
 
@@ -77,7 +67,32 @@ class ApiController extends Controller
 
         $user = JWTAuth::authenticate($request->token);
 
-        return response()->json(['user' => $user]);
+        return $this->success('','获取成功',['user' => $user]);
+    }
+
+    /**
+     * 请求成功
+     * @param int $status 请求状态码
+     * @param string $msg 提示消息
+     * @param string $content 返回内容
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function success($status = 200, $msg = '请求成功', $content = '')
+    {
+        return response()->json(['status' => $status,'msg' => $msg, 'content' => $content]);
+    }
+
+
+    /**
+     * 请求失败
+     * @param int $status
+     * @param string $msg
+     * @param string $content
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function error($status = 400, $msg = '请求失败', $content = '')
+    {
+        return response()->json(['status' => $status,'msg' => $msg, 'content' => $content]);
     }
 }
 
